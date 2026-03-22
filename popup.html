@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self'; object-src 'none'; style-src 'self';">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zoho Remaining Work Time</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="header-top">
+        <h1>Remaining Work Time</h1>
+        <button id="refreshBtn" class="refresh-btn" title="Refresh">&#8635;</button>
+      </div>
+      <p class="sub">Target: <strong id="targetDisplay">08:00:00</strong></p>
+    </header>
+
+    <section id="status" class="card">
+      <div id="urlRow" class="row small dim"></div>
+
+      <div id="workedRow" class="row">
+        <span class="label">Worked today</span>
+        <span id="workedVal" class="value">—</span>
+      </div>
+
+      <div id="relieveRow" class="row">
+        <span class="label">Relieving time</span>
+        <span id="relieveVal" class="value">—</span>
+      </div>
+
+      <div id="remainingRow" class="row">
+        <span class="label">Remaining</span>
+        <span id="remainingVal" class="value big">—</span>
+      </div>
+
+      <div id="overtimeRow" class="row hidden">
+        <span class="label">Overtime</span>
+        <span id="overtimeVal" class="value big">+00:00:00</span>
+      </div>
+
+      <div id="breakRow" class="row">
+        <span class="label">Break total</span>
+        <span id="breakVal" class="value small mono">—</span>
+      </div>
+
+      <div id="punchesRow" class="row">
+        <span class="label">Punches</span>
+        <span id="punchesVal" class="value small mono">—</span>
+      </div>
+
+      <details class="week">
+        <summary>Weekly summary</summary>
+        <div id="weekTable" class="week-table"></div>
+        <div id="weekTotals" class="week-totals"></div>
+      </details>
+
+      <div id="noteRow" class="row small dim"></div>
+      <div id="errorRow" class="error hidden"></div>
+    </section>
+
+    <section class="card settings">
+      <h2>Settings</h2>
+      <div class="form-row">
+        <label for="targetSelect">Today Working time</label>
+        <select id="targetSelect">
+          <option value="04:00">4:00</option>
+          <option value="06:00">6:00</option>
+          <option value="06:30">6:30</option>
+          <option value="07:00">7:00</option>
+          <option value="08:00">8:00</option>
+        </select>
+        <button id="saveTargetBtn" type="button">Save</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="popup.js"></script>
+</body>
+</html>
