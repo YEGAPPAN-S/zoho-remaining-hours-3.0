@@ -407,12 +407,23 @@ async function readWorkedFromPage(isRetry = false) {
     // Build pairs & breaks
     const { pairs, breakTotal } = pairPunches(preferred.punches || []);
 
-    // Compute worked using 09:00 clamp
+    // Compute worked using 09:00 clamp (captures any open/active session)
     const now = new Date();
     const nowMin = now.getHours() * 60 + now.getMinutes();
-    const workedClampedSec = computeWorkedFromPairsClamped(pairs, nowMin);
+    const pairsWorkedSec = computeWorkedFromPairsClamped(pairs, nowMin);
 
-    // Display worked (from our clamp)
+    // Parse Zoho's directly-reported hours — authoritative for completed sessions
+    // but may lag during an active session (open IN with no OUT yet)
+    const wParts = (preferred.workedText || '').trim().split(':').map(p => parseInt(p, 10));
+    const zohoWorkedSec = (wParts.length >= 2 && !wParts.some(isNaN))
+      ? wParts[0] * 3600 + wParts[1] * 60 + (wParts[2] || 0)
+      : 0;
+
+    // Use whichever is higher: Zoho's value is authoritative for completed sessions;
+    // pairs-based value covers any open session Zoho hasn't summed yet
+    const workedClampedSec = Math.max(zohoWorkedSec, pairsWorkedSec);
+
+    // Display worked
     workedValEl.textContent = secondsToHMS(workedClampedSec);
 
     // Remaining / Overtime
@@ -530,11 +541,22 @@ function pairPunches(events) {
     .filter(e => (e && typeof e.min === 'number' && (e.kind === 'IN' || e.kind === 'OUT')))
     .sort((a, b) => (a.min - b.min) || ((a.kind === 'OUT') - (b.kind === 'OUT')));
 
+  // Remove zero-duration IN→OUT pairs at the same minute (system artifacts that break pairing)
+  const filtered = [];
+  for (let i = 0; i < seq.length; i++) {
+    if (seq[i].kind === 'IN' && i + 1 < seq.length &&
+        seq[i + 1].kind === 'OUT' && seq[i].min === seq[i + 1].min) {
+      i++; // skip both
+    } else {
+      filtered.push(seq[i]);
+    }
+  }
+
   const pairs = [];
   let openIn = null;
   let lastOutMin = null;
 
-  for (const e of seq) {
+  for (const e of filtered) {
     if (e.kind === 'IN') {
       if (openIn) {
         // Two INs in a row → close the previous as an open segment (out=null)
@@ -565,7 +587,7 @@ function pairPunches(events) {
   // Total break = sum of each OUT → next IN gap
   let breakTotal = 0;
   let prevOutMin = null;
-  for (const e of seq) {
+  for (const e of filtered) {
     if (e.kind === 'OUT') {
       prevOutMin = e.min;
     } else if (e.kind === 'IN' && prevOutMin != null && e.min > prevOutMin) {
